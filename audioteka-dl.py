@@ -57,15 +57,23 @@ class AudiotekaClient:
 
     @property
     def shelf(self) -> List[Audiobook]:
-        resp = self.session.get(f"https://{self.BASE_DOMAIN}/pl/my-shelf")
+        resp = self.session.get(f"https://{self.BASE_DOMAIN}/pl/my-shelf/")
         html = BeautifulSoup(resp.content, "html.parser")
         audiobooks = []
 
-        for item in html.find_all("div", {"class": "shelf-item"}):
-            a = item.find("a", {"class": "js-item-trunk8"})
-            *_, item_id = a.get("href").split("/")
-            item_title = a.get("title")
-            audiobooks.append(Audiobook(item_id, item_title))
+        last_page = 1
+        data_pages = html.find("a", {"class": "js-content-load"})
+        if data_pages:
+            last_page = int(data_pages.get("data-last-page"))
+
+        for page in range(1, last_page + 1):
+            resp = self.session.get(f"https://{self.BASE_DOMAIN}/pl/my-shelf/{page}")
+            html = BeautifulSoup(resp.content, "html.parser")
+            for item in html.find_all("div", {"class": "shelf-item"}):
+                a = item.find("a", {"class": "js-item-trunk8"})
+                *_, item_id = a.get("href").split("/")
+                item_title = a.get("title")
+                audiobooks.append(Audiobook(item_id, item_title))
 
         return audiobooks
 
