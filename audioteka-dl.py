@@ -96,6 +96,15 @@ class AudiotekaClient:
         html = BeautifulSoup(resp.content, "html.parser")
 
         download_link = urlparse(html.find("a", text=re.compile("Pobierz")).get("href"))
+
+        if download_link.path.endswith("/download-sample"):
+            print(
+                colored(
+                    f"Audiobook {audiobook.title} is a sample - skipping...", "cyan"
+                )
+            )
+            return
+
         [(_, token)] = parse_qsl(download_link.query)
 
         dest_dir = dest_dir / audiobook.id
